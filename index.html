@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>say hi 👋</title>
+<title>play me 🎮</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -114,7 +114,7 @@
   }
 
   .blob-frame{
-    width:200px; height:200px;
+    width:170px; height:170px;
     overflow:hidden;
     border-radius:62% 38% 55% 45% / 48% 55% 45% 52%;
     animation:morph 8s ease-in-out infinite;
@@ -132,13 +132,14 @@
     object-fit:cover;
   }
 
-  /* ---------- DIALOGUE PANEL (game-textbox styling for the message) ---------- */
+  /* ---------- GAME PANEL ---------- */
   .panel{
     position:relative;
+    width:100%;
     background:var(--panel);
     border:3px solid var(--gold);
     border-radius:20px;
-    padding:26px 22px 24px;
+    padding:24px 18px 22px;
     box-shadow:0 14px 30px rgba(0,0,0,0.35);
   }
   .panel::before, .panel::after{
@@ -153,26 +154,65 @@
   h1{
     font-family:'Baloo 2', sans-serif;
     font-weight:800;
-    font-size:clamp(21px, 6vw, 25px);
+    font-size:clamp(19px, 6vw, 23px);
     line-height:1.3;
-    margin-bottom:10px;
+    margin-bottom:6px;
+    letter-spacing:.02em;
   }
   h1 span{ color:var(--gold); }
 
-  p.story{
+  p.hint{
     font-family:'Work Sans', sans-serif;
-    font-size:15px;
-    line-height:1.6;
+    font-size:13.5px;
+    line-height:1.5;
     color:var(--cream-dim);
+    margin-bottom:14px;
   }
 
-  p.meta{
+  /* ---------- GAME AREA ---------- */
+  #gameArea{ width:100%; transition:opacity .5s ease; }
+  #gameArea.fading{ opacity:0; }
+  #gameSvg{ width:100%; height:auto; display:block; touch-action:none; user-select:none; }
+  .dot-line{
+    stroke:var(--gold);
+    stroke-width:3;
+    fill:none;
+    stroke-linecap:round;
+    opacity:0.9;
+  }
+  .live-line{
+    stroke:var(--gold);
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-dasharray:5 5;
+    opacity:0.75;
+  }
+  .dot circle{
+    fill:rgba(251,246,236,0.06);
+    stroke:var(--gold);
+    stroke-width:2.5;
+    transition:fill .18s ease, transform .18s ease;
+  }
+  .dot text{
+    fill:var(--cream);
     font-family:'Baloo 2', sans-serif;
-    font-weight:500;
+    font-size:13px;
+    font-weight:700;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+  .dot{ transform-origin:center; }
+  .dot.done circle{ fill:var(--gold); stroke:var(--red); }
+  .dot.done text{ fill:var(--panel); }
+
+  p.progress{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
     font-size:13px;
     color:var(--gold);
-    margin-top:16px;
-    letter-spacing:.01em;
+    margin-top:10px;
+    letter-spacing:.02em;
   }
 
   .controls{
@@ -180,7 +220,7 @@
     flex-direction:column;
     align-items:center;
     gap:16px;
-    margin-top:26px;
+    margin-top:22px;
   }
 
   .sound-toggle{
@@ -198,28 +238,90 @@
   }
   .sound-toggle:active{ transform:scale(0.97); }
 
-  .cta{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    background:var(--red);
-    color:var(--cream);
-    font-family:'Baloo 2', sans-serif;
-    font-weight:700;
-    font-size:18px;
-    text-decoration:none;
-    padding:17px 34px;
-    border-radius:999px;
-    box-shadow:0 12px 26px rgba(206,17,38,0.45), 0 0 0 3px rgba(244,185,66,0.5);
-    transition:transform .15s ease;
+  /* ---------- FULLSCREEN BURST + RESULT ---------- */
+  #fullscreenBurst{
+    position:fixed; inset:0;
+    z-index:70;
+    pointer-events:none;
+    background-color:rgba(21,33,40,0);
+    transition:background-color 2.2s ease;
   }
-  .cta:active{ transform:scale(0.96); }
+  #fullscreenBurst.darken{ background-color:rgba(21,33,40,0.93); }
+  #fullscreenBurst svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .fs-line{
+    stroke:var(--gold);
+    stroke-width:2;
+    fill:none;
+    stroke-linecap:round;
+    opacity:0;
+    transition:opacity .9s ease, stroke-dashoffset .9s ease;
+  }
+  .fs-line.show{ opacity:0.8; }
+  .fs-dot{
+    position:fixed;
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 10px rgba(244,185,66,0.85);
+    transform:translate(-50%,-50%) scale(0);
+    opacity:0;
+    transition:transform .8s cubic-bezier(.34,1.56,.64,1), opacity .8s ease;
+  }
+  .fs-dot.show{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+
+  #fsText{
+    position:fixed; inset:0;
+    z-index:80;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    padding:0 34px;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .9s ease;
+  }
+  #fsText.show{ opacity:1; pointer-events:auto; }
+  .fs-tagline{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(21px, 6.5vw, 27px);
+    line-height:1.4;
+    color:var(--cream);
+    max-width:320px;
+  }
+  .fs-redirecting{
+    font-family:'Work Sans', sans-serif;
+    font-size:13px;
+    color:var(--gold);
+  }
+  .dotdotdot::after{
+    content:"";
+    animation:dots 1.2s steps(4,end) infinite;
+  }
+  @keyframes dots{
+    0%{ content:""; }
+    25%{ content:"."; }
+    50%{ content:".."; }
+    75%{ content:"..."; }
+    100%{ content:""; }
+  }
+  .fs-manual{
+    font-family:'Work Sans', sans-serif;
+    font-size:12px;
+    color:var(--cream-dim);
+    text-decoration:underline;
+    display:none;
+  }
+  .fs-manual.show{ display:inline-block; }
 </style>
 </head>
 <body>
 
   <div id="tapLayer">
-    <p>CLICK TO<br>SAY HI 👋</p>
+    <p>CLICK TO<br>PLAY ME 🎮</p>
   </div>
 
   <div id="world">
@@ -240,24 +342,51 @@
       </video>
     </div>
 
-    <div class="panel">
-      <h1>welcome fellow ambitous person, i'm <span>Dilara</span> 👋</h1>
-      <p class="story">JOIN MY JOURNEY AS I BUILD MY PERSONAL BRAND, DREAM LIFE AND DELUSIONAL GOAL !! HOPEFULLY WITHOUT LOSING MY SANITY LOL</p>
-      <p class="meta">Met on 12th of Sep · next summit greek campus</p>
+    <div class="panel" id="gamePanel">
+      <div id="gameArea">
+        <h1>connect the <span>dots</span></h1>
+        <p class="hint">drag from 1 to 7 — don't lift your finger</p>
+
+        <svg id="gameSvg" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+          <line class="dot-line" data-line="1" x1="35" y1="170" x2="85" y2="60"></line>
+          <line class="dot-line" data-line="2" x1="85" y1="60" x2="140" y2="150"></line>
+          <line class="dot-line" data-line="3" x1="140" y1="150" x2="175" y2="45"></line>
+          <line class="dot-line" data-line="4" x1="175" y1="45" x2="215" y2="130"></line>
+          <line class="dot-line" data-line="5" x1="215" y1="130" x2="250" y2="40"></line>
+          <line class="dot-line" data-line="6" x1="250" y1="40" x2="270" y2="115"></line>
+
+          <g class="dot" data-num="1" transform="translate(35,170)"><circle r="17"></circle><text y="1">1</text></g>
+          <g class="dot" data-num="2" transform="translate(85,60)"><circle r="17"></circle><text y="1">2</text></g>
+          <g class="dot" data-num="3" transform="translate(140,150)"><circle r="17"></circle><text y="1">3</text></g>
+          <g class="dot" data-num="4" transform="translate(175,45)"><circle r="17"></circle><text y="1">4</text></g>
+          <g class="dot" data-num="5" transform="translate(215,130)"><circle r="17"></circle><text y="1">5</text></g>
+          <g class="dot" data-num="6" transform="translate(250,40)"><circle r="17"></circle><text y="1">6</text></g>
+          <g class="dot" data-num="7" transform="translate(270,115)"><circle r="17"></circle><text y="1">7</text></g>
+        </svg>
+
+        <p class="progress" id="progressText">0 / 7 connected — drag from 1</p>
+      </div>
     </div>
 
     <div class="controls">
       <button class="sound-toggle" id="soundBtn">🔊 mute</button>
-      <a class="cta" href="https://www.linkedin.com/in/dilara-hisham-egypt" target="_blank" rel="noopener">
-        Connect on LinkedIn →
-      </a>
     </div>
   </main>
+
+  <!-- shown full-screen once the dots are connected -->
+  <div id="fsText">
+    <p class="fs-tagline">you never know who's the dot that takes you where you want to go</p>
+    <p class="fs-redirecting">connecting you now<span class="dotdotdot"></span></p>
+    <a class="fs-manual" id="fsManualLink" href="#" target="_blank" rel="noopener">tap here if it doesn't open</a>
+  </div>
 
   <!-- Background music track — add your own mp3 and it starts the moment the tap layer is dismissed. -->
   <audio id="bgAudio" src="your-song.mp3" loop></audio>
 
   <script>
+    const LINKEDIN_URL = "https://www.linkedin.com/in/dilara-hisham-egypt";
+    const svgNS = "http://www.w3.org/2000/svg";
+
     const tapLayer = document.getElementById('tapLayer');
     const soundBtn = document.getElementById('soundBtn');
     const audio = document.getElementById('bgAudio');
@@ -273,6 +402,200 @@
       audio.muted = muted;
       soundBtn.textContent = muted ? '🔇 unmute' : '🔊 mute';
     });
+
+    // ---------- CONNECT THE DOTS — DRAG TO CONNECT ----------
+    const svgEl = document.getElementById('gameSvg');
+    const dotEls = document.querySelectorAll('.dot');
+    const lineEls = document.querySelectorAll('.dot-line');
+    const progressText = document.getElementById('progressText');
+    const gameArea = document.getElementById('gameArea');
+    const total = dotEls.length;
+
+    lineEls.forEach(line => {
+      const len = line.getTotalLength();
+      line.style.strokeDasharray = len;
+      line.style.strokeDashoffset = len;
+      line.style.transition = 'stroke-dashoffset .3s ease';
+    });
+
+    function dotPos(num){
+      const g = document.querySelector(`.dot[data-num="${num}"]`);
+      const m = g.getAttribute('transform').match(/translate\(([-\d.]+),([-\d.]+)\)/);
+      return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+    }
+
+    function svgPoint(evt){
+      const pt = svgEl.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      return pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    }
+
+    let dragging = false;
+    let nextIndex = 1;
+    let liveLine = null;
+
+    function resetGame(){
+      dragging = false;
+      nextIndex = 1;
+      dotEls.forEach(d => d.classList.remove('done'));
+      lineEls.forEach(l => { l.style.strokeDashoffset = l.getTotalLength(); });
+      if (liveLine) { liveLine.remove(); liveLine = null; }
+      progressText.textContent = `0 / ${total} connected — drag from 1`;
+    }
+
+    document.querySelector('.dot[data-num="1"]').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      resetGame();
+      dragging = true;
+      nextIndex = 2;
+      const start = dotPos(1);
+      document.querySelector('.dot[data-num="1"]').classList.add('done');
+      progressText.textContent = `1 / ${total} connected`;
+
+      liveLine = document.createElementNS(svgNS, 'line');
+      liveLine.setAttribute('class', 'live-line');
+      liveLine.setAttribute('x1', start.x);
+      liveLine.setAttribute('y1', start.y);
+      liveLine.setAttribute('x2', start.x);
+      liveLine.setAttribute('y2', start.y);
+      svgEl.appendChild(liveLine);
+
+      svgEl.setPointerCapture(e.pointerId);
+    });
+
+    svgEl.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const p = svgPoint(e);
+      if (liveLine) {
+        liveLine.setAttribute('x2', p.x);
+        liveLine.setAttribute('y2', p.y);
+      }
+      if (nextIndex > total) return;
+
+      const target = dotPos(nextIndex);
+      const dist = Math.hypot(p.x - target.x, p.y - target.y);
+
+      if (dist < 24) {
+        const seg = document.querySelector(`.dot-line[data-line="${nextIndex - 1}"]`);
+        if (seg) seg.style.strokeDashoffset = 0;
+        document.querySelector(`.dot[data-num="${nextIndex}"]`).classList.add('done');
+        progressText.textContent = `${nextIndex} / ${total} connected`;
+
+        if (liveLine) {
+          liveLine.setAttribute('x1', target.x);
+          liveLine.setAttribute('y1', target.y);
+        }
+        nextIndex++;
+
+        if (nextIndex > total) {
+          dragging = false;
+          if (liveLine) { liveLine.remove(); liveLine = null; }
+          progressText.textContent = `all connected!`;
+          setTimeout(fireBurst, 300);
+        }
+      }
+    });
+
+    function endDrag(){
+      if (!dragging) return;
+      dragging = false;
+      if (liveLine) { liveLine.remove(); liveLine = null; }
+      if (nextIndex <= total) resetGame();
+    }
+    svgEl.addEventListener('pointerup', endDrag);
+    svgEl.addEventListener('pointercancel', endDrag);
+
+    // ---------- FULLSCREEN BURST ----------
+    function fireBurst() {
+      gameArea.classList.add('fading');
+      setTimeout(() => { gameArea.style.display = 'none'; }, 500);
+
+      const lastCircle = document.querySelector('.dot[data-num="7"] circle');
+      const rect = lastCircle.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 2;
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'fullscreenBurst';
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('darken'));
+
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+      overlay.appendChild(svg);
+
+      const rows = 6, cols = 6;
+      const points = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const jitterX = (Math.random() - 0.5) * (vw / cols) * 0.6;
+          const jitterY = (Math.random() - 0.5) * (vh / rows) * 0.6;
+          const x = Math.max(10, Math.min(vw - 10, (c + 0.5) / cols * vw + jitterX));
+          const y = Math.max(10, Math.min(vh - 10, (r + 0.5) / rows * vh + jitterY));
+          points.push({ x, y });
+        }
+      }
+      // ripple outward from the origin, slowly
+      points.sort((a, b) => {
+        const da = Math.hypot(a.x - originX, a.y - originY);
+        const db = Math.hypot(b.x - originX, b.y - originY);
+        return da - db;
+      });
+
+      const stagger = 110; // ms between each dot lighting up — slow, deliberate
+
+      points.forEach((p, i) => {
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('class', 'fs-line');
+        line.setAttribute('x1', originX);
+        line.setAttribute('y1', originY);
+        line.setAttribute('x2', p.x);
+        line.setAttribute('y2', p.y);
+        svg.appendChild(line);
+
+        const dot = document.createElement('div');
+        dot.className = 'fs-dot';
+        dot.style.left = p.x + 'px';
+        dot.style.top = p.y + 'px';
+        overlay.appendChild(dot);
+
+        setTimeout(() => {
+          line.classList.add('show');
+          dot.classList.add('show');
+        }, stagger * i);
+      });
+
+      const totalDelay = stagger * points.length + 900;
+      setTimeout(() => showResult(), totalDelay);
+    }
+
+    function showResult() {
+      const fsText = document.getElementById('fsText');
+      const fsManual = document.getElementById('fsManualLink');
+      fsManual.href = LINKEDIN_URL;
+      fsText.classList.add('show');
+      setTimeout(goToLinkedIn, 2000);
+    }
+
+    function goToLinkedIn() {
+      const fsManual = document.getElementById('fsManualLink');
+      try {
+        if (window.top) {
+          window.top.location.href = LINKEDIN_URL;
+          return;
+        }
+      } catch (e) {
+        // cross-origin/sandboxed preview — fall back to opening a new tab
+      }
+      const opened = window.open(LINKEDIN_URL, '_blank');
+      if (!opened) {
+        fsManual.classList.add('show');
+      }
+    }
   </script>
 
   <!--
@@ -293,8 +616,8 @@
          src="your-song.mp3" above to match).
 
     3. YOUR LINKEDIN LINK
-       - Replace "https://www.linkedin.com/in/YOUR-LINKEDIN-HANDLE" in the
-         button's href with your real profile URL.
+       - Already set to your real profile URL in the LINKEDIN_URL constant
+         near the top of the <script> tag. Edit that if it ever changes.
 
     4. HOSTING IT LIVE TONIGHT (free, no login needed)
        - Go to https://app.netlify.com/drop
@@ -312,7 +635,13 @@
     6. TEST IT ON YOUR ACTUAL PHONE BEFORE THE EVENT
        - Open the live link on your phone, not your laptop.
        - Check: tap layer shows → tap it → video plays → music starts →
-         mute button works → LinkedIn button opens your real profile.
+         drag from dot 1 through dot 7 without lifting your finger → the whole
+         screen slowly fills with connected dots → tagline appears → page
+         auto-redirects to your real LinkedIn.
+       - IMPORTANT: the auto-redirect only works reliably once the page is
+         hosted live and opened directly on a phone (step 4). It will NOT
+         auto-open inside a sandboxed preview (like a chat window) — that's a
+         browser security restriction, not a bug in the code.
     ============================================
   -->
 </body>
